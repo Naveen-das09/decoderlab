@@ -29,6 +29,10 @@ Build a reproducible, visualization-first QEC research workbench. Start with rot
 4. Add bounded asynchronous jobs, database persistence, quotas and auth before public experiments.
 5. Expand Deltakit, QLDPC and neural training only after core workflows are trustworthy.
 
+
+## Current delivery focus — portfolio preview before v0.1
+For early demo deliverables and the current visual reference, read `docs/PORTFOLIO_PREVIEW_ROADMAP.md` and `docs/DASHBOARD_VISUALIZATION_BRIEF.md`. These are **targets, not release claims**. Preserve scope of v0.1 issue #9 (two scientific presets) while prioritizing a polished truthful surface-code dashboard preview by December 7. First inspect existing dashboard PR #7 and backend scientific PR #6 to avoid duplication. All work still follows branch/PR/CI review gates.
+
 ## Daily completion report
 - Issue/goal and user-visible change
 - Branch, commit(s), draft PR URL (or explicit no-change reason)
