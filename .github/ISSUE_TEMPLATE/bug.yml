@@ -1,0 +1,24 @@
+name: Bug / scientific correctness
+description: A reproducible defect in behavior, QEC semantics or visualization
+title: "[Bug] "
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed result and reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: versions
+    attributes:
+      label: Environment, library versions, circuit hash, seed
+  - type: textarea
+    id: impact
+    attributes:
+      label: Scientific impact, provenance and severity
