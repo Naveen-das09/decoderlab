@@ -20,6 +20,8 @@ Stim-generated noise channels receives p separately. This is **not** a
 calibrated QPU noise model. Logical failures are mismatches between predicted
 and actual logical observable flips. Simulation output carries circuit hash,
 dependency versions, seed, task, code parameters and shot counts.
+See the [scientific method](SCIENTIFIC_METHOD.md) for the four channel
+definitions, reference cases, validation commands and reproducibility limits.
 
 Wilson score 95% intervals are appropriate only for the independent Bernoulli
 shots baseline. Error bars must show zero-failure upper confidence bounds.

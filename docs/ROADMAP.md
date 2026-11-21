@@ -1,13 +1,13 @@
 # DecoderLab development roadmap
 
-## Next: verified simulator foundation
-- Install Stim and PyMatching in a dedicated integration CI job.
-- Validate zero-noise deterministic reference, nonzero-noise execution,
-  detector/observable dimensions and decoder output.
-- Fix scientific or API mismatches before charting actual runs.
+## Simulator foundation
+- Review the backend and [reference suite](SCIENTIFIC_METHOD.md) with passing
+  unit, scientific integration and dependency checks.
+- Keep the adapter and chart contract stable while adding the first dashboard.
 
 ## Visualization-first research dashboard
-- Next.js + TypeScript app shell with clear product information architecture.
+- Start with an accessible Next.js and TypeScript Experiment Command Center
+  and a typed adapter for the v1 logical-error-rate payload.
 - Plotly/accessible charts for LER vs p, uncertainty bounds and comparative runs.
 - Scalable syndrome spacetime explorer and lattice visualization.
 - Responsive layouts, keyboard navigation, reduced motion, loading/empty/error

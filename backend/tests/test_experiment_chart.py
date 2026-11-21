@@ -1,5 +1,4 @@
 from dataclasses import asdict
-from hashlib import sha256
 import pytest
 from fastapi.testclient import TestClient
 from decoderlab.domain import ExperimentSpec

@@ -1,8 +1,11 @@
 """Research-only API: synchronous simulation endpoints are not suitable for public deployment."""
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
 from .domain import ExperimentSpec
+from .experiment_chart import execute_with_chart
 from .stim_engine import EngineUnavailable, run_stim_pymatching
+from .visualization import BinomialObservation, build_ler_chart
 
 app = FastAPI(title='DecoderLab API', version='0.1.0')
 
@@ -40,8 +43,6 @@ def create_experiment(request: ExperimentRequest):
     except EngineUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
-from .visualization import BinomialObservation, build_ler_chart
-
 class ChartObservation(BaseModel):
     model_config = ConfigDict(extra='forbid', allow_inf_nan=False, strict=True)
     physical_error_probability: float
@@ -62,8 +63,6 @@ def chart_preview(request: ChartPreviewRequest):
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-
-from .experiment_chart import execute_with_chart
 
 @app.post('/api/v1/experiments/run-with-chart')
 def run_experiment_with_chart(request: ExperimentRequest):

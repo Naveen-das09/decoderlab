@@ -1,4 +1,3 @@
-import math
 import pytest
 from fastapi.testclient import TestClient
 from decoderlab.api import app
