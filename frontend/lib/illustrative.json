@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0.0",
+  "chart_type": "logical_error_rate_vs_physical_error_probability",
+  "provenance": "illustrative",
+  "verification": "not_verified_by_chart_builder",
+  "run_id": null,
+  "source_description": "Synthetic chart fixture with independent binomial intervals for UI review.",
+  "confidence_interval": {
+    "method": "Wilson score",
+    "level": 0.95,
+    "assumption": "independent Bernoulli shots"
+  },
+  "axes": {
+    "x": {
+      "label": "Physical error probability",
+      "scale": "linear"
+    },
+    "y": {
+      "label": "Logical failure probability",
+      "scale": "linear",
+      "optional_log_scale": true
+    }
+  },
+  "points": [
+    {
+      "physical_error_probability": 0.001,
+      "logical_error_rate": 0.0,
+      "ci95_lower": 0.0,
+      "ci95_upper": 0.001917047281252934,
+      "shots": 2000,
+      "logical_failures": 0,
+      "log_y_eligible": false
+    },
+    {
+      "physical_error_probability": 0.002,
+      "logical_error_rate": 0.0015,
+      "ci95_lower": 0.0005102635836384819,
+      "ci95_upper": 0.004401032555770693,
+      "shots": 2000,
+      "logical_failures": 3,
+      "log_y_eligible": true
+    },
+    {
+      "physical_error_probability": 0.003,
+      "logical_error_rate": 0.0085,
+      "ci95_lower": 0.005313767739685552,
+      "ci95_upper": 0.013570689737786079,
+      "shots": 2000,
+      "logical_failures": 17,
+      "log_y_eligible": true
+    },
+    {
+      "physical_error_probability": 0.004,
+      "logical_error_rate": 0.023,
+      "ci95_lower": 0.017287655978080053,
+      "ci95_upper": 0.030541207128235243,
+      "shots": 2000,
+      "logical_failures": 46,
+      "log_y_eligible": true
+    },
+    {
+      "physical_error_probability": 0.005,
+      "logical_error_rate": 0.0455,
+      "ci95_lower": 0.03720527135020145,
+      "ci95_upper": 0.05553732462845745,
+      "shots": 2000,
+      "logical_failures": 91,
+      "log_y_eligible": true
+    },
+    {
+      "physical_error_probability": 0.006,
+      "logical_error_rate": 0.0775,
+      "ci95_lower": 0.06657483756091465,
+      "ci95_upper": 0.09004506739174409,
+      "shots": 2000,
+      "logical_failures": 155,
+      "log_y_eligible": true
+    }
+  ]
+}
