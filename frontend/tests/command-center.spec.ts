@@ -10,6 +10,13 @@ test("shows an honest empty state and recovers from an invalid import", async ({
     page.getByRole("heading", { name: "Experiment Command Center" }),
   ).toBeVisible();
   await expect(page.getByText("No experiment data loaded")).toBeVisible();
+  await page.keyboard.press("Tab");
+  const skipLink = page.getByRole("link", {
+    name: "Skip to experiment workspace",
+  });
+  await expect(skipLink).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("main")).toBeFocused();
   await expect(page.getByRole("button", { name: "Export SVG" })).toHaveCount(0);
 
   await page.getByLabel("Chart JSON file").setInputFiles({
@@ -86,11 +93,13 @@ test("exposes point details to the keyboard and exports labeled data", async ({
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
   const screenshotDir = process.env.DECODERLAB_SCREENSHOT_DIR;
-  if (screenshotDir)
+  if (screenshotDir) {
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
       path: `${screenshotDir}/decoderlab-desktop.png`,
       fullPage: true,
     });
+  }
 });
 
 test("fits a narrow viewport with a responsive plot and scrollable table", async ({
@@ -125,9 +134,11 @@ test("fits a narrow viewport with a responsive plot and scrollable table", async
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
   const screenshotDir = process.env.DECODERLAB_SCREENSHOT_DIR;
-  if (screenshotDir)
+  if (screenshotDir) {
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
       path: `${screenshotDir}/decoderlab-mobile.png`,
       fullPage: true,
     });
+  }
 });

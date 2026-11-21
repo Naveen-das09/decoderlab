@@ -39,7 +39,7 @@ a:focus-visible,
   position: fixed;
   left: 12px;
   top: 12px;
-  transform: translateY(-150%);
+  clip-path: inset(50%);
   z-index: 2;
   padding: 10px 16px;
   border-radius: 8px;
@@ -47,7 +47,7 @@ a:focus-visible,
 }
 
 .skip-link:focus {
-  transform: translateY(0);
+  clip-path: none;
 }
 
 .wrap {
