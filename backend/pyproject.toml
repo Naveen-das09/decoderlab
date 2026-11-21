@@ -18,3 +18,6 @@ include = ["decoderlab*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

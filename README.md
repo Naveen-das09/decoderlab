@@ -3,10 +3,9 @@
 **Open-source quantum error correction research, visualization, and AI decoder platform.**
 
 > **Status: early research prototype.** The backend contract, statistical reporting,
-> and direct Stim/PyMatching execution adapter exist. The dashboard, database and
-> Deltakit integration are not yet implemented. No real-scientific-dependency
-> integration benchmark is validated yet. **Do not deploy the synchronous simulation
-> endpoints to an unrestricted public service.**
+> and direct Stim/PyMatching execution adapter exist. Reference tests exercise
+> the real simulator and decoder. The dashboard, database and Deltakit
+> integration are planned. Keep the synchronous simulation endpoints on loopback.
 
 ## Purpose
 
@@ -18,17 +17,19 @@ BYOC/HPC training and evidence-based decoder recommendations.
 
 Use Python 3.11+:
 
-    cd backend
-    python -m pip install -e '.[test]'
-    python -m pytest -q
-    uvicorn decoderlab.api:app --reload
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python -m pip install -e './backend[test]'
+    python -m pytest backend/tests -q
+    python -m uvicorn decoderlab.api:app --host 127.0.0.1 --reload
 
 Open http://localhost:8000/docs for interactive API documentation.
 
-To run a real distance-5 Z-memory experiment, separately install the optional
-simulation dependencies:
+To run the real distance-5 Z-memory experiment and its integration checks,
+install the reference versions of the optional simulation dependencies:
 
-    python -m pip install -e '.[simulation,test]'
+    python -m pip install -c backend/integration_tests/constraints.txt -e './backend[test,simulation]'
+    python -m pytest backend/integration_tests -q
 
 Example request body for POST /api/v1/experiments/run-with-chart:
 
@@ -65,5 +66,6 @@ logical error probability. Log-scale plots must not invent a positive floor.
 5. Add neural GNN/transformer training and bring-your-own-compute workers.
 6. Only then train an evidence-based intelligent decoder advisor.
 
-See docs/ for science and design decisions. This repository is Apache-2.0
-licensed. Contributions welcome after initial stabilization.
+See [the scientific method](docs/SCIENTIFIC_METHOD.md),
+[architecture](docs/ARCHITECTURE.md), and [contribution guide](CONTRIBUTING.md).
+This repository is Apache-2.0 licensed.
