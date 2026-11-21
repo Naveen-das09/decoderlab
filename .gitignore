@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+*.egg-info/
+dist/
+build/
+.coverage
+# Environment and private artifacts
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# Data / model outputs
+datasets/
+checkpoints/
+artifacts/
+# Web
+node_modules/
+.next/
+out/
