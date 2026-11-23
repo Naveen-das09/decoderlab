@@ -5,6 +5,7 @@ import {
   chartCsv,
   formatProbability,
   parseChartFile,
+  parseSurfaceRun,
   provenanceLabel,
   type ChartPayload,
   type ChartSource,
@@ -28,26 +29,31 @@ export default function CommandCenter() {
   const [loaded, setLoaded] = useState<{
     chart: ChartPayload;
     source: ChartSource;
+    runJson?: string;
   } | null>(null);
   const [selected, setSelected] = useState(0);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"import" | "run" | null>(null);
   const [error, setError] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const plot = useRef<SVGSVGElement>(null);
   const chart = loaded?.chart;
   const point = chart?.points[selected];
 
-  function showChart(chart: ChartPayload, source: ChartSource) {
+  function showChart(
+    chart: ChartPayload,
+    source: ChartSource,
+    runJson?: string,
+  ) {
     setSelected(0);
     setError("");
-    setLoaded({ chart, source });
+    setLoaded({ chart, source, runJson });
   }
 
   async function importChart(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    setBusy(true);
+    setBusy("import");
     setError("");
     try {
       if (file.size > maxFileSize)
@@ -58,7 +64,34 @@ export default function CommandCenter() {
         error instanceof Error ? error.message : "The chart could not be read.",
       );
     } finally {
-      setBusy(false);
+      setBusy(null);
+    }
+  }
+
+  async function runSurfacePreset() {
+    setBusy("run");
+    setError("");
+    try {
+      const response = await fetch("/api/surface-preset", { method: "POST" });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          typeof data?.error === "string"
+            ? data.error
+            : "The preset could not be run. Check the local servers, then retry.",
+        );
+      }
+      const run = parseSurfaceRun(data);
+      showChart(run.chart, "local", JSON.stringify(data, null, 2));
+    } catch (error) {
+      setError(
+        error instanceof Error &&
+          !(error instanceof SyntaxError || error instanceof TypeError)
+          ? error.message
+          : "The preset could not be run. Check the local servers, then retry.",
+      );
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -95,7 +128,7 @@ export default function CommandCenter() {
             <button
               className="button secondary"
               type="button"
-              disabled={busy}
+              disabled={busy !== null}
               onClick={() =>
                 showChart(parseChartFile(JSON.stringify(example)), "example")
               }
@@ -103,12 +136,21 @@ export default function CommandCenter() {
               Load illustrative data
             </button>
             <button
-              className="button primary"
+              className="button secondary"
               type="button"
-              disabled={busy}
+              disabled={busy !== null}
               onClick={() => input.current?.click()}
             >
               Import chart JSON
+            </button>
+            <button
+              className="button primary"
+              type="button"
+              disabled={busy !== null}
+              aria-describedby="surface-preset-description"
+              onClick={runSurfacePreset}
+            >
+              Run surface-code preset
             </button>
             <input
               ref={input}
@@ -121,9 +163,22 @@ export default function CommandCenter() {
           </div>
         </div>
 
+        <p
+          id="surface-preset-description"
+          className="source-note mb-5 max-w-3xl"
+        >
+          Rotated Z memory, distance 5, five rounds, 10,000 shots and seed 42.
+          Stim applies 0.5% to each of four circuit-level channels (after
+          Clifford gates, before rounds, before measurements and after resets).
+          A shot fails when PyMatching’s logical Z prediction differs from the
+          sampled logical flip.
+        </p>
+
         {busy && (
           <p role="status" className="state">
-            Reading chart file…
+            {busy === "run"
+              ? "Running surface-code simulation…"
+              : "Reading chart file…"}
           </p>
         )}
         {error && (
@@ -162,6 +217,7 @@ export default function CommandCenter() {
             {chart ? (
               <LerPlot
                 chart={chart}
+                source={loaded.source}
                 selected={selected}
                 onSelect={setSelected}
                 plotRef={plot}
@@ -171,8 +227,8 @@ export default function CommandCenter() {
                 <div>
                   <strong>No experiment data loaded</strong>
                   <p>
-                    Import a DecoderLab chart or run-with-chart JSON export. You
-                    can also explore the chart with labeled illustrative data.
+                    Run the surface-code preset, import a DecoderLab JSON
+                    export, or load illustrative data.
                   </p>
                 </div>
               </div>
@@ -197,7 +253,9 @@ export default function CommandCenter() {
                 <p className="source-note">
                   {chart.provenance === "illustrative"
                     ? "Generated example data."
-                    : "Source claims from the imported file are unverified."}
+                    : loaded?.source === "local"
+                      ? "Simulated locally with Stim and PyMatching."
+                      : "Source claims from the imported file are unverified."}
                 </p>
                 {loaded?.source === "import" && chart.source_description && (
                   <p className="source-note">{chart.source_description}</p>
@@ -228,6 +286,22 @@ export default function CommandCenter() {
                     </dd>
                   </div>
                 </dl>
+                {loaded?.runJson && (
+                  <button
+                    className="button subtle"
+                    type="button"
+                    onClick={() => {
+                      if (loaded.runJson)
+                        saveFile(
+                          "decoderlab-surface-run.json",
+                          loaded.runJson,
+                          "application/json",
+                        );
+                    }}
+                  >
+                    Export run JSON
+                  </button>
+                )}
                 {chart.run_id && (
                   <p className="run-id">
                     <span>Run ID</span>
@@ -264,7 +338,7 @@ export default function CommandCenter() {
                 onClick={() =>
                   saveFile(
                     "decoderlab-observations.csv",
-                    chartCsv(chart),
+                    chartCsv(chart, loaded?.source),
                     "text/csv;charset=utf-8",
                   )
                 }

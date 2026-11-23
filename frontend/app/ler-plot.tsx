@@ -3,6 +3,7 @@ import {
   formatProbability,
   provenanceLabel,
   type ChartPayload,
+  type ChartSource,
 } from "../lib/chart";
 
 const ticks = [0, 1, 2, 3, 4];
@@ -17,11 +18,13 @@ function axisMaximum(value: number) {
 
 export function LerPlot({
   chart,
+  source,
   selected,
   onSelect,
   plotRef,
 }: {
   chart: ChartPayload;
+  source: ChartSource;
   selected: number;
   onSelect: (index: number) => void;
   plotRef: Ref<SVGSVGElement>;
@@ -56,8 +59,10 @@ export function LerPlot({
   const y = (value: number) => bottom - (value / yMax) * (bottom - top);
 
   const sourceLabel =
-    provenanceLabel[chart.provenance] +
-    (chart.provenance === "illustrative" ? "" : " · unverified import");
+    source === "local"
+      ? "Local simulation"
+      : provenanceLabel[chart.provenance] +
+        (chart.provenance === "illustrative" ? "" : " · unverified import");
 
   return (
     <div ref={container}>

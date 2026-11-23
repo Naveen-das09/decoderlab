@@ -142,3 +142,94 @@ test("fits a narrow viewport with a responsive plot and scrollable table", async
     });
   }
 });
+
+test("reports a failed local run and lets a researcher retry", async ({
+  page,
+}) => {
+  let attempts = 0;
+  await page.route("**/api/surface-preset", async (route) => {
+    attempts++;
+    await route.fulfill({
+      status: 502,
+      json: {
+        error: "FastAPI did not respond. Check that it is running, then retry.",
+      },
+    });
+  });
+  await page.goto("/");
+  const run = page.getByRole("button", { name: "Run surface-code preset" });
+  await run.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "FastAPI did not respond.",
+  );
+  await expect(run).toBeEnabled();
+  await run.click();
+  await expect.poll(() => attempts).toBe(2);
+  await expect(page.getByText("No experiment data loaded")).toBeVisible();
+});
+
+test("rejects a preset request from a different origin", async ({
+  request,
+}) => {
+  const response = await request.post("/api/surface-preset", {
+    headers: { Origin: "http://example.test" },
+  });
+  expect(response.status()).toBe(403);
+});
+
+test("runs the real surface preset and exports the replayable response", async ({
+  page,
+}) => {
+  test.skip(
+    process.env.DECODERLAB_LIVE_PRESET !== "1",
+    "Start the local FastAPI backend first.",
+  );
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const responseEvent = page.waitForResponse("**/api/surface-preset");
+  await page.getByRole("button", { name: "Run surface-code preset" }).click();
+  const response = await responseEvent;
+  expect(response.ok()).toBe(true);
+  const bundle = await response.json();
+  await expect(page.getByRole("img")).toContainText("Local simulation");
+  const details = page.getByRole("region", { name: "Point details" });
+  await expect(details).toContainText(
+    "Simulated locally with Stim and PyMatching.",
+  );
+  await expect(details).toContainText(bundle.run_id);
+  await expect(details).toContainText(
+    `${bundle.experiment.logical_failures.toLocaleString("en")} / 10,000`,
+  );
+  await expect(details.getByText("Wilson 95%", { exact: true })).toBeVisible();
+  expect(bundle.experiment.manifest.spec.seed).toBe(42);
+  expect(bundle.experiment.manifest.circuit_sha256).toMatch(/^[a-f0-9]{64}$/);
+
+  const downloadEvent = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export run JSON" }).click();
+  const download = await downloadEvent;
+  const chunks = [];
+  for await (const chunk of await download.createReadStream())
+    chunks.push(chunk);
+  expect(JSON.parse(Buffer.concat(chunks).toString("utf-8"))).toEqual(bundle);
+
+  const screenshotDir = process.env.DECODERLAB_SCREENSHOT_DIR;
+  if (screenshotDir) {
+    await page.screenshot({
+      path: `${screenshotDir}/surface-desktop.png`,
+      fullPage: true,
+    });
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    390,
+  );
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  if (screenshotDir) {
+    await page.screenshot({
+      path: `${screenshotDir}/surface-mobile.png`,
+      fullPage: true,
+    });
+    await download.saveAs(`${screenshotDir}/surface-run.json`);
+  }
+});
