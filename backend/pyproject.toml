@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "decoderlab-api"
+version = "0.1.0"
+description = "DecoderLab API contracts and scientific statistics"
+requires-python = ">=3.11"
+dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "pydantic>=2,<3"]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10", "httpx>=0.27,<1", "numpy>=1.26,<3"]
+simulation = ["stim>=1.13,<2", "pymatching>=2.2,<3"]
+
+[tool.setuptools.packages.find]
+include = ["decoderlab*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
