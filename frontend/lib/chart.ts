@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { surfacePreset } from "./surface-preset";
 
 const probability = z.number().min(0).max(1);
 
@@ -76,7 +77,67 @@ const importSchema = z.union([chartSchema, bundleSchema]);
 
 export type ChartPayload = z.infer<typeof chartSchema>;
 export type ChartPoint = z.infer<typeof pointSchema>;
-export type ChartSource = "example" | "import";
+export type ChartSource = "example" | "import" | "local";
+
+const fingerprint = z.string().regex(/^[a-f0-9]{64}$/);
+const surfaceRunSchema = z
+  .object({
+    run_id: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+    chart: chartSchema,
+    experiment: z.object({
+      shots: z.literal(surfacePreset.shots),
+      logical_failures: z.int().nonnegative(),
+      data_origin: z.literal("simulated"),
+      execution_status: z.literal("completed"),
+      manifest: z.object({
+        schema_version: z.literal("decoderlab.simulation.v1"),
+        simulator: z.literal("stim"),
+        decoder: z.literal(surfacePreset.decoder),
+        code_task: z.literal("surface_code:rotated_memory_z"),
+        circuit_noise_model: z.literal(
+          "stim_generated_circuit_level_4_channels_equal_p",
+        ),
+        circuit_sha256: fingerprint,
+        spec: z.object({
+          code_family: z.literal(surfacePreset.code_family),
+          distance: z.literal(surfacePreset.distance),
+          physical_error_probability: z.literal(
+            surfacePreset.physical_error_probability,
+          ),
+          rounds: z.literal(surfacePreset.rounds),
+          decoder: z.literal(surfacePreset.decoder),
+          shots: z.literal(surfacePreset.shots),
+          seed: z.literal(surfacePreset.seed),
+        }),
+        library_versions: z.object({
+          stim: z.string(),
+          pymatching: z.string(),
+        }),
+      }),
+    }),
+  })
+  .refine(({ chart, run_id, experiment }) => {
+    const point = chart.points[0];
+    return (
+      chart.provenance === "simulated" &&
+      chart.run_id === run_id &&
+      chart.points.length === 1 &&
+      point.physical_error_probability ===
+        surfacePreset.physical_error_probability &&
+      point.shots === experiment.shots &&
+      point.logical_failures === experiment.logical_failures
+    );
+  });
+
+export function parseSurfaceRun(input: unknown) {
+  const result = surfaceRunSchema.safeParse(input);
+  if (!result.success) {
+    throw new Error(
+      "FastAPI returned an invalid surface-code result. Check the backend version, then retry.",
+    );
+  }
+  return result.data;
+}
 
 export function parseChartFile(input: string): ChartPayload {
   let data: unknown;
@@ -113,7 +174,10 @@ export const provenanceLabel: Record<ChartPayload["provenance"], string> = {
   hardware_measured: "Hardware measurement",
 };
 
-export function chartCsv(chart: ChartPayload): string {
+export function chartCsv(
+  chart: ChartPayload,
+  source: ChartSource = "import",
+): string {
   const headings = [
     "physical_error_probability",
     "logical_error_rate",
@@ -142,7 +206,9 @@ export function chartCsv(chart: ChartPayload): string {
         chart.provenance,
         chart.provenance === "illustrative"
           ? "illustrative"
-          : "unverified_import",
+          : source === "local"
+            ? "local_simulation"
+            : "unverified_import",
         csvId,
       ].join(","),
     ),
