@@ -55,3 +55,37 @@ cases. Hardware accuracy and decoder rankings require their own validation.
 [Stim generator and noise reference](https://github.com/quantumlib/Stim/blob/main/doc/usage_command_line.md)
 
 [PyMatching API reference](https://pymatching.readthedocs.io/en/stable/api.html)
+
+## Bivariate bicycle parity-check reference
+
+The `[[72,12,6]]` construction uses the `(6,6)` torus and polynomials
+`A = x^3 + y + y^2` and `B = y^3 + x + x^2` from [Bravyi et al., Table 3](https://arxiv.org/html/2308.07915v2#S4.T3).
+The constructor returns `H_X = [A | B]` and `H_Z = [B^T | A^T]`. Both
+matrices have 36 rows and 72 columns, row weight six and binary rank 30.
+They commute over GF(2), giving `72 - 30 - 30 = 12` logical qubits.
+The paper reports distance six.
+
+Each block uses monomial order `6*i + j` for `x^i y^j`. A shift moves a
+column's 1 to the row for the translated monomial. The reference hashes
+use the raw row-major bytes with one unsigned byte per binary entry.
+
+| Matrix | SHA-256 |
+| --- | --- |
+| `H_X` | `5ba3e05b4407c4584fd585cd52b714a1a432dc08ec7d1a3d243ffb66b8458838` |
+| `H_Z` | `ffc3405373dc5afa63f51be84d8c7f1d31a973e4334a8d60dd70fb2e5368d63b` |
+
+For the planned code-capacity model, each data qubit receives an
+independent X error with probability `p`, and the syndrome is measured
+perfectly as `H_Z e` over GF(2). A shot fails if the residual after
+decoding has a nonzero syndrome or represents a nontrivial logical X
+even though its syndrome is zero.
+
+The deterministic checks use zero-based qubit and check indices. With
+an X error at qubit 0, checks 3, 24 and 30 fire. At qubit 36, checks 4,
+5 and 18 fire. The X operator on qubits 0, 3, 6, 15, 24 and 30 has zero
+syndrome and increases the X-stabilizer rank by one when appended as a
+row. It is a weight-six logical X witness. Run the reference tests
+with `python -m pytest backend/tests/test_bivariate_bicycle.py -q` after
+installing the test dependencies above. These are exact algebraic
+checks with no random seed, decoder, simulated shots or confidence
+intervals.
